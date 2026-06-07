@@ -39,7 +39,7 @@ services:
   # adapter spawns `hermes acp` as a subprocess and speaks ACP JSON-RPC over
   # stdio — no docker-in-docker, no socket-proxy.
   tavily-adapter:
-    image: ghcr.io/vakovalskii/searcharvester:latest
+    image: walaqi2/searcharvester:latest
     build: ./simple_tavily_adapter
     container_name: tavily-adapter
     restart: unless-stopped
@@ -70,6 +70,10 @@ services:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - API_KEY=${API_KEY:-}
+      # Search engines: comma-separated list, overrides config.yaml default_engines.
+      # e.g. SEARCH_ENGINES=google,duckduckgo,brave  or  bing,google
+      - SEARCH_ENGINES=${SEARCH_ENGINES:-}
     depends_on:
       - searxng
     healthcheck:

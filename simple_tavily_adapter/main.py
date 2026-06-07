@@ -27,15 +27,80 @@ import aiohttp
 import trafilatura
 from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 from pydantic import BaseModel, Field, constr
 from sse_starlette.sse import EventSourceResponse
 
-from tavily_client import TavilyResponse, TavilyResult
 from config_loader import config
+
+
+# ---------- Response models (previously in tavily_client.py) ----------
+
+class TavilyResult(BaseModel):
+    url: str
+    title: str
+    content: str
+    score: float
+    raw_content: str | None = None
+
+
+class TavilyResponse(BaseModel):
+    query: str
+    follow_up_questions: list[str] | None = None
+    answer: str | None = None
+    images: list[str] = []
+    results: list[TavilyResult]
+    response_time: float
+    request_id: str
+
+
 from orchestrator import Orchestrator, Job, JobStatus
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# ---------- API Key Auth ----------
+# Set API_KEY env var to enable authentication.
+# Follows Tavily API convention: Authorization: Bearer <key>
+# /health is always open (needed by Docker healthcheck).
+
+_API_KEY = os.environ.get("API_KEY", "")
+
+_OPEN_PATHS = {"/health"}
+
+
+class APIKeyMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if not _API_KEY or request.url.path in _OPEN_PATHS:
+            return await call_next(request)
+
+        # 1. Authorization: Bearer <key>
+        provided = ""
+        auth = request.headers.get("authorization", "")
+        if auth.lower().startswith("bearer "):
+            provided = auth[7:].strip()
+
+        # 2. JSON body: {"api_key": "<key>", ...}
+        if not provided and request.headers.get("content-type", "").startswith("application/json"):
+            body = await request.body()
+            # Cache body so the route handler can read it again
+            request._body = body  # type: ignore[attr-defined]
+            try:
+                payload = json.loads(body)
+                if isinstance(payload, dict):
+                    provided = payload.get("api_key", "")
+            except Exception:
+                pass
+
+        if provided != _API_KEY:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Unauthorized: provide 'Authorization: Bearer <key>' header or 'api_key' in body"},
+            )
+        return await call_next(request)
+
 
 app = FastAPI(title="Searcharvester", version="2.2.0")
 
@@ -54,6 +119,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(APIKeyMiddleware)
 
 
 # ---------- Orchestrator singleton ----------
@@ -292,7 +358,7 @@ async def search(request: SearchRequest) -> dict[str, Any]:
         "q": request.query,
         "format": "json",
         "categories": request.categories or "general",
-        "engines": request.engines or "google,duckduckgo,brave",
+        "engines": request.engines or config.default_engines,
         "pageno": 1,
         "language": "auto",
         "safesearch": 1,

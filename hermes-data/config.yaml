@@ -44,7 +44,7 @@ model:
   
   # API configuration (falls back to OPENROUTER_API_KEY env var)
   # api_key: "your-key-here"  # Uncomment to set here instead of .env
-  base_url: "http://109.230.162.92:44334/v1"
+  base_url: "https://cc.atai8.cc/v1"
 
   # ── Token limits — two settings, easy to confuse ──────────────────────────
   #

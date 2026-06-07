@@ -3,7 +3,7 @@ FROM nousresearch/hermes-agent:latest
 USER root
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends curl \
+ && apt-get install -y --no-install-recommends curl gosu \
  && rm -rf /var/lib/apt/lists/*
 
 RUN uv pip install --no-cache-dir --python /opt/hermes/.venv/bin/python3 \
@@ -22,9 +22,11 @@ path = '/opt/hermes/run_agent.py'
 src = open(path, encoding='utf-8').read()
 old = '_use_streaming = True\n                    # Provider signaled'
 new = '_use_streaming = False  # patched: vLLM streaming tool_call bug workaround (vllm#27641)\n                    # Provider signaled'
-assert old in src, 'streaming toggle anchor not found — upstream changed; update the patch'
-open(path, 'w', encoding='utf-8').write(src.replace(old, new))
-print('patched _use_streaming = False')
+if old in src:
+    open(path, 'w', encoding='utf-8').write(src.replace(old, new))
+    print('patched _use_streaming = False')
+else:
+    print('streaming toggle anchor not found — upstream changed, skipping patch (not using vLLM)')
 PY
 
 RUN mkdir -p /app && chown hermes:hermes /app

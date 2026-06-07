@@ -1,6 +1,7 @@
 """
 Configuration loader for Tavily adapter
 """
+import os
 import yaml
 from pathlib import Path
 from typing import Dict, Any
@@ -59,6 +60,10 @@ class Config:
     
     @property
     def default_engines(self) -> str:
+        # Priority: SEARCH_ENGINES env var → config.yaml → hardcoded fallback
+        env_val = os.environ.get("SEARCH_ENGINES", "").strip()
+        if env_val:
+            return env_val
         return self._config.get("adapter", {}).get("search", {}).get("default_engines", "google,duckduckgo,brave")
 
 # Глобальный экземпляр конфига

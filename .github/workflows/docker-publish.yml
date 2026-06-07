@@ -1,0 +1,38 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "simple_tavily_adapter/**"
+      - "docker-compose.yaml"
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract version from docker-compose.yaml
+        id: version
+        run: |
+          VERSION=$(grep -m1 'version:' simple_tavily_adapter/main.py | grep -oP '"\K[^"]+' || echo "latest")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./simple_tavily_adapter
+          push: true
+          tags: |
+            walaqi2/searcharvester:latest
+            walaqi2/searcharvester:${{ steps.version.outputs.version }}
