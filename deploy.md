@@ -192,3 +192,37 @@ docker compose exec tavily-adapter /opt/hermes/.venv/bin/python -m pytest -q
 
 **修改了 skills 后不生效**
 - 重新执行第五步的同步命令，然后重启容器
+
+
+
+```
+
+  ┌────────────────┬───────────────────────────────┬──────────────────────────────────────┐
+  │  Render 服务   │             镜像              │                 说明                 │
+  ├────────────────┼───────────────────────────────┼──────────────────────────────────────┤
+  │ redis          │ valkey/valkey:8-alpine        │ 内部服务，不对外                     │
+  ├────────────────┼───────────────────────────────┼──────────────────────────────────────┤
+  │ searxng        │ searxng/searxng:latest        │ 需要设 secret_key、SEARXNG_BASE_URL  │
+  ├────────────────┼───────────────────────────────┼──────────────────────────────────────┤
+  │ tavily-adapter │ walaqi2/searcharvester:latest │ 设 SEARXNG_URL 指向 searxng 服务地址 │
+  └────────────────┴───────────────────────────────┴──────────────────────────────────────┘
+  ```
+SEARXNG_URL = 
+  VALKEY_URL redis://red-d8io9o28qa3s73ekq0ag:6379
+ SEARXNG_SECRET = a7f3e92b1d456c8f0e3a7b2d9c4f1e86
+
+
+ 完整的 Render 三服务环境变量速查:
+
+  redis 服务: 无需额外环境变量
+
+  searxng 服务:
+  SEARXNG_SECRET=a7f3e92b1d456c8f0e3a7b2d9c4f1e86
+  VALKEY_URL=redis://red-d8io9o28qa3s73ekq0ag:6379   ← 从 redis 服务 Connect 页复制
+
+  tavily-adapter 服务:
+  OPENAI_API_KEY=sk-...
+  OPENAI_BASE_URL=https://cc.atai8.cc/v1
+  API_KEY=sa-searcharvester-2024
+  SEARCH_ENGINES=bing,google
+  SEARXNG_URL=https://your-searxng.onrender.com   ← searxng 服务的 External URL

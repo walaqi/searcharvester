@@ -17,4 +17,8 @@ else
     echo "SearXNG: settings.yml is read-only (bind mount), skipping env injection"
 fi
 
-exec /usr/local/searxng/dockerfiles/docker-entrypoint.sh "$@"
+UPSTREAM_EP=$(find /usr/local/searxng /searxng -name "docker-entrypoint.sh" 2>/dev/null | head -1)
+if [ -z "$UPSTREAM_EP" ]; then
+    UPSTREAM_EP=$(find / -maxdepth 6 -name "docker-entrypoint.sh" 2>/dev/null | grep -v proc | head -1)
+fi
+exec "$UPSTREAM_EP" "$@"
