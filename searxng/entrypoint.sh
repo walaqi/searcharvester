@@ -21,4 +21,4 @@ UPSTREAM_EP=$(find /usr/local/searxng /searxng -name "docker-entrypoint.sh" 2>/d
 if [ -z "$UPSTREAM_EP" ]; then
     UPSTREAM_EP=$(find / -maxdepth 6 -name "docker-entrypoint.sh" 2>/dev/null | grep -v proc | head -1)
 fi
-exec "$UPSTREAM_EP" "$@"
+exec sh "$UPSTREAM_EP" "$@"
