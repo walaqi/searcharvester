@@ -32,6 +32,9 @@ class Config:
     
     @property
     def searxng_url(self) -> str:
+        env_val = os.environ.get("SEARXNG_URL", "").strip()
+        if env_val:
+            return env_val
         return self._config.get("adapter", {}).get("searxng_url", "http://searxng:8080")
     
     @property

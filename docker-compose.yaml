@@ -74,6 +74,9 @@ services:
       # Search engines: comma-separated list, overrides config.yaml default_engines.
       # e.g. SEARCH_ENGINES=google,duckduckgo,brave  or  bing,google
       - SEARCH_ENGINES=${SEARCH_ENGINES:-}
+      # SearXNG URL: overrides config.yaml adapter.searxng_url
+      # Set this when running tavily-adapter outside Docker Compose (e.g. Render.com)
+      - SEARXNG_URL=${SEARXNG_URL:-}
     depends_on:
       - searxng
     healthcheck:
