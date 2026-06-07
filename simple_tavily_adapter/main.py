@@ -134,7 +134,7 @@ def _build_orchestrator() -> Orchestrator | None:
         logger.warning("%s not on PATH — /research disabled", hermes_bin)
         return None
 
-    jobs_dir = FSPath(os.environ.get("JOBS_DIR", "/srv/searxng-docker/jobs"))
+    jobs_dir = FSPath(os.environ.get("JOBS_DIR", "/tmp/searcharvester-jobs"))
     jobs_dir.mkdir(parents=True, exist_ok=True)
 
     pass_env_keys = [
