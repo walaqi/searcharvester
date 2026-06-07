@@ -1,17 +1,17 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Images
 
 on:
   push:
     branches: [main]
     paths:
       - "simple_tavily_adapter/**"
+      - "searxng/**"
       - "docker-compose.yaml"
   workflow_dispatch:  # 允许手动触发
 
 jobs:
-  build-and-push:
+  build-adapter:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,13 +22,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract version from docker-compose.yaml
+      - name: Extract version
         id: version
         run: |
           VERSION=$(grep -m1 'version:' simple_tavily_adapter/main.py | grep -oP '"\K[^"]+' || echo "latest")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Build and push
+      - name: Build and push tavily-adapter
         uses: docker/build-push-action@v5
         with:
           context: ./simple_tavily_adapter
@@ -36,3 +36,23 @@ jobs:
           tags: |
             walaqi2/searcharvester:latest
             walaqi2/searcharvester:${{ steps.version.outputs.version }}
+
+  build-searxng:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push searxng
+        uses: docker/build-push-action@v5
+        with:
+          context: ./searxng
+          push: true
+          tags: |
+            walaqi2/searcharvester-searxng:latest

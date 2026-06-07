@@ -16,7 +16,8 @@ services:
 
   searxng:
     container_name: searxng
-    image: docker.io/searxng/searxng:latest
+    image: walaqi2/searcharvester-searxng:latest
+    build: ./searxng
     restart: unless-stopped
     networks:
       - searxng
@@ -28,6 +29,8 @@ services:
     environment:
       - SEARXNG_BASE_URL=http://localhost:8999/
       - BIND_ADDRESS=[::]:8080
+      - SEARXNG_SECRET=${SEARXNG_SECRET:-please-change-me}
+      - VALKEY_URL=${VALKEY_URL:-redis://redis:6379/0}
     logging:
       driver: "json-file"
       options:

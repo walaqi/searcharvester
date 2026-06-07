@@ -1,0 +1,20 @@
+use_default_settings: true
+
+server:
+  # Replaced at runtime by entrypoint.sh using $SEARXNG_SECRET env var.
+  # Locally this file is overridden by the config.yaml bind mount, so this
+  # placeholder is never used in docker compose.
+  secret_key: "SEARXNG_SECRET_PLACEHOLDER"
+  limiter: false
+
+search:
+  formats:
+    - html
+    - json    # required for the adapter API
+    - csv
+    - rss
+
+valkey:
+  # Replaced at runtime by entrypoint.sh using $VALKEY_URL env var.
+  # Default falls back to the docker-compose internal service name.
+  url: "VALKEY_URL_PLACEHOLDER"
